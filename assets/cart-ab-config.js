@@ -137,7 +137,7 @@ window.AbCartConfig = {
         if (now < "10:00") return false;
         const cartTags = readCurrentCartItemTags();
         if (cartTags.isCartEmpty) return;
-        if (!cartTags.everyItemHasTag("express")) return false;
+        if (!cartTags.everyItemHasTag("express-delivery")) return false;
       },
     ],
   },
