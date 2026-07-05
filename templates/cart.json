@@ -1,7 +1,59 @@
 {
   "sections": {
     "cart-ab": {
-      "type": "cart-ab-custom"
+      "type": "cart-ab-custom",
+      "blocks": {
+        "birthday": {
+          "type": "text",
+          "settings": {
+            "product-card-message-title": "Happy Birthday",
+            "product-card-message-content": "Dear ,\nWith very best wishes for a most wonderful birthday and year ahead.\nMuch love,"
+          }
+        },
+        "romance": {
+          "type": "text",
+          "settings": {
+            "product-card-message-title": "Romance",
+            "product-card-message-content": "To the most special person in my life. You are my love, my heart and my joy. I cannot imagine my life without you."
+          }
+        },
+        "getwell": {
+          "type": "text",
+          "settings": {
+            "product-card-message-title": "Get well soon",
+            "product-card-message-content": "Dear ,\nWarmest wishes for a speedy recovery! Our thoughts are with you and we hope this brightens up your day."
+          }
+        },
+        "anniversary": {
+          "type": "text",
+          "settings": {
+            "product-card-message-title": "Anniversary",
+            "product-card-message-content": "Dear ,\nThank you for the memories of yesterday, for the happiness today, and the promise of all tomorrows! Happy Anniversary!"
+          }
+        },
+        "sorry": {
+          "type": "text",
+          "settings": {
+            "product-card-message-title": "I'm Sorry",
+            "product-card-message-content": "Dear ,\nI'll never forgive myself...but I'm hoping you will. I'm sorry."
+          }
+        },
+        "sympathy": {
+          "type": "text",
+          "settings": {
+            "product-card-message-title": "Sympathy",
+            "product-card-message-content": "Dear ,\nPlease accept our condolences for your loss.\nWith deepest sympathy,"
+          }
+        }
+      },
+      "block_order": [
+        "birthday",
+        "romance",
+        "getwell",
+        "anniversary",
+        "sorry",
+        "sympathy"
+      ]
     }
   },
   "order": [
