@@ -1,0 +1,72 @@
+{% liquid
+  assign is_selected = is_selected | default: false
+  assign is_lcp = is_lcp | default: false
+  assign is_hidden = is_hidden | default: false
+  assign tab_tags = tab_tags | default: ''
+  assign placeholder = placeholder | default: 'product-1'
+%}
+<div
+  class="ab-cart__card-item{% if is_selected %} is-selected{% endif %}"
+  data-variant-id="{{ product.first_available_variant.id }}"
+  data-product-id="{{ product.id }}"
+  {% if tab_tags != '' %} data-tab-tags="{{ tab_tags }}"{% endif %}
+  {% if is_hidden %} style="display:none"{% endif %}
+>
+  <div class="ab-cart__card-item-visual">
+    <span class="ab-cart__card-add-overlay">
+      <span class="ab-cart__card-add-icon">
+        {% render 'icon', icon: 'cart-plus' %}
+        {% render 'icon', icon: 'cart-check' %}
+        <span class="icon-text text-adding">Adding<span class="ab-loading-dots" aria-hidden="true">...</span></span>
+        <span class="icon-text text-removing">Removing<span class="ab-loading-dots" aria-hidden="true">...</span></span>
+      </span>
+    </span>
+    <button
+      type="button"
+      aria-haspopup="true"
+      class="ab-cart__card-popup-icon"
+      data-ab-modal-trigger
+      data-product-url="{{ product.url }}"
+      aria-label="Quick view: {{ product.title | escape }}"
+    >
+      i
+    </button>
+    {% if product.featured_image %}
+      {%- if is_lcp -%}
+        {{
+          product.featured_image
+          | image_url: width: 300
+          | image_tag:
+            widths: '200,300,600',
+            sizes: '(max-width: 480px) 30vw, (max-width: 768px) 22vw, 150px',
+            alt: product.title,
+            loading: 'eager',
+            fetchpriority: 'high',
+            preload: true
+        }}
+      {%- else -%}
+        {{
+          product.featured_image
+          | image_url: width: 300
+          | image_tag:
+            widths: '200,300,600',
+            sizes: '(max-width: 480px) 30vw, (max-width: 768px) 22vw, 150px',
+            alt: product.title,
+            loading: 'lazy'
+        }}
+      {%- endif -%}
+    {% else %}
+      {{ placeholder | placeholder_svg_tag }}
+    {% endif %}
+  </div>
+  <div class="ab-cart__card-item-info">
+    <h4 class="ab-cart__card-item-name">{{ product.title }}</h4>
+    <p class="ab-cart__card-item-price">
+      {%- if product.price > 0 -%}
+        + {{ product.price | money }}
+      {%- else -%}
+        <span class="ab-cart__card-item-free">FREE</span>
+      {%- endif -%}
+    </p>
+  </div>
+</div>

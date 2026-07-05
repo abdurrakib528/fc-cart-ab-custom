@@ -1,0 +1,946 @@
+/* ====================================================================
+   ab-calendar.css  v2.1.0
+   Styles for AbDatepicker + AbTimeslot
+   --------------------------------------------------------------------
+   TABLE OF CONTENTS
+     1. Scoped CSS reset
+     2. Design tokens (CSS custom properties)
+     3. Section container & cards
+     4. Section headers
+     5. Date-row chip strip
+     6. Footer (See-Full-Calendar toggle + selected-date chip)
+     7. Inline calendar wrap
+     8. Popup calendar wrap
+     9. Calendar month-navigation
+    10. Calendar grid + cells
+    11. Selection bar
+    12. Date tags (cosmetic)
+    13. Timeslot grid
+    14. Timeslot chip states (selected / disabled / badge)
+    15. Timeslot empty state
+    16. Mobile overrides
+   (Skeleton / CLS-prevention now lives in ab-cart-section.css)
+   ==================================================================== */
+
+/* ====================================================================
+   1. SCOPED CSS RESET
+   ==================================================================== */
+
+.ab-dp-root *,
+.ab-dp-root *::before,
+.ab-dp-root *::after {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+	font-family: var(--ab-font-main);
+}
+
+/* ====================================================================
+   2. DESIGN TOKENS (CSS custom properties)
+   ==================================================================== */
+
+.ab-datepicker-section {
+	-webkit-font-smoothing: antialiased;
+	user-select: none;
+	--ab-accent-light: #edf6f2;
+	--ab-accent-text: #ffffff;
+
+	/* Surfaces */
+	--ab-bg: #ffffff;
+	--ab-bg-subtle: #f7f8f7;
+	--ab-border: #e4e6e4;
+
+	/* Text */
+	--ab-text: #1a1c1a;
+	--ab-text-muted: #767976;
+	--ab-text-faint: #b4b8b4;
+
+	/* States */
+	--ab-blocked: #c4c8c4;
+	--ab-dot: #e05252;
+	--ab-today-chip: #9ca39c;
+
+	/* Elevation */
+	--ab-shadow: 0 2px 12px rgba(0, 0, 0, 0.07), 0 0 0 1px rgba(0, 0, 0, 0.04);
+	--ab-shadow-popup: 0 8px 32px rgba(0, 0, 0, 0.14), 0 0 0 1px rgba(0, 0, 0, 0.06);
+
+	/* Layout */
+	--ab-radius: 6px;
+	--ab-chip-w: 42px;
+	--ab-chip-h: 60px;
+	--ab-cell: 32px;
+	--ab-card-w: 100%;
+
+	/* Motion */
+	--ab-t: 0.12s ease;
+}
+
+/* ====================================================================
+   4. SECTION CONTAINER & CARDS
+   ==================================================================== */
+
+.ab-datepicker-section {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	gap: 20px;
+	margin: 0px auto 20px;
+}
+
+.ab-datepicker-wrapper,
+.ab-timeslot-wrapper {
+	position: relative;
+	width: var(--ab-card-w);
+	background: var(--ab-bg);
+	border-radius: var(--ab-radius);
+	box-shadow: var(--ab-shadow);
+	overflow: visible;
+}
+
+.ab-datepicker-section .ab-datepicker-wrapper {
+	z-index: 3;
+}
+.ab-datepicker-section .ab-timeslot-wrapper {
+	z-index: 1;
+}
+
+/* ====================================================================
+   5. SECTION HEADERS
+   ==================================================================== */
+
+.ab-datepicker-header,
+.ab-timeslot-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 10px;
+	background: var(--ab-bg-subtle);
+	border-bottom: 1px solid var(--ab-border);
+	font-size: 13px;
+	font-weight: 700;
+	text-transform: uppercase;
+	color: var(--ab-accent);
+	border-radius: var(--ab-radius) var(--ab-radius) 0 0;
+}
+
+.ab-datepicker-header p,
+.ab-datepicker-header span,
+.ab-timeslot-wrapper p {
+	margin: 0;
+	font-size: 13px;
+	font-weight: 700;
+	text-transform: none;
+	letter-spacing: 0;
+}
+
+.ab-header-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 13px 16px 8px;
+}
+
+.ab-heading-text {
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--ab-text);
+	letter-spacing: -0.01em;
+}
+
+.ab-clock {
+	font-size: 10px;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	color: var(--ab-accent);
+	min-width: 74px;
+	text-align: right;
+}
+
+/* ====================================================================
+   6. DATE-ROW CHIP STRIP
+   ==================================================================== */
+
+.ab-chips {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	overflow-x: auto;
+	scrollbar-width: none;
+	justify-content: space-between;
+	padding: 10px;
+}
+
+.ab-chips::-webkit-scrollbar {
+	display: none;
+}
+
+.ab-chip {
+	flex: 1;
+	flex-shrink: 0;
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 5px;
+	padding: 10px 5px;
+	border: 1px solid var(--ab-border);
+	border-radius: 6px;
+	background: var(--ab-bg);
+	color: var(--ab-text);
+	cursor: pointer;
+	transition:
+		background var(--ab-t),
+		border-color var(--ab-t);
+}
+
+.ab-dow {
+	font-size: 13px;
+	color: inherit;
+	line-height: 1;
+	opacity: 0.85;
+}
+
+.ab-dom {
+	font-size: 14px;
+	font-weight: 600;
+	color: inherit;
+	line-height: 1;
+}
+
+/* Today chip marker (amber tint) */
+.ab-chip.ab-today {
+	border: 1px solid #dad55ecc;
+	color: #777620;
+}
+
+/* Selected chip */
+.ab-chip.ab-sel {
+	border-color: var(--ab-accent);
+	background: var(--ab-accent);
+	color: var(--ab-accent-light);
+}
+
+.ab-chip:hover:not(.ab-dis) {
+	border-color: var(--ab-accent);
+}
+
+/* Disabled */
+.ab-chip.ab-dis {
+	background-color: #f7f9fc;
+	color: #a0a0a0;
+	cursor: not-allowed;
+	opacity: 0.6;
+}
+.ab-chip.ab-today-dis {
+	border-color: color-mix(in srgb, var(--ab-accent) 30%, transparent);
+}
+
+/* Small red dot indicating a date has a cutoff */
+.ab-chip-dot {
+	position: absolute;
+	bottom: 7px;
+	width: 4px;
+	height: 4px;
+	background: var(--ab-dot);
+	border-radius: 50%;
+}
+
+/* ====================================================================
+   7. FOOTER (See-Full-Calendar toggle button)
+   ==================================================================== */
+
+.ab-footer {
+	display: flex;
+	align-items: center;
+	gap: 20px;
+	padding: 10px;
+	border-top: 1px solid var(--ab-border);
+}
+
+.ab-see-full:hover {
+	opacity: 0.85;
+}
+.ab-see-full:hover .ab-selected-date {
+	color: var(--ab-accent-text);
+}
+
+.ab-datepicker-wrapper .ab-see-full {
+	height: auto;
+	min-height: auto;
+	padding: 0px;
+	font-size: 13px;
+	font-weight: 600;
+	line-height: 0;
+	text-transform: none;
+	color: var(--ab-accent-dark, #2f7a5b);
+	cursor: pointer;
+	transition:
+		opacity var(--ab-t),
+		color var(--ab-t);
+	height: auto;
+	min-height: auto;
+	background: none;
+	border: none;
+	font-family: inherit;
+	display: flex;
+	align-items: center;
+	gap: 5px;
+	width: max-content;
+	border-radius: var(--ab-radius);
+	justify-content: flex-start;
+	text-align: left;
+	margin: 10px 10px 15px;
+	padding: 0px 0px;
+	text-decoration: underline;
+	text-underline-offset: 3px;
+	text-decoration-color: color-mix(in srgb, var(--ab-accent-dark, #2f7a5b) 40%, transparent);
+}
+
+.ab-datepicker-wrapper .ab-see-full:hover {
+	color: var(--ab-accent, #51a582);
+	text-decoration-color: currentColor;
+	opacity: 1;
+}
+.ab-see-full-icon {
+	width: 13px;
+}
+.ab-see-full.ab-selected-date {
+	padding: 10px 10px !important;
+	color: var(--ab-accent-text);
+	background: var(--ab-accent);
+	font-size: 12px;
+	margin-block: 4px;
+	text-decoration: none;
+	border-radius: var(--ab-radius) !important;
+}
+.ab-see-full.ab-selected-date:hover {
+	color: var(--ab-accent-text);
+}
+.ab-see-full-text {
+	line-height: 0;
+}
+
+.ab-see-full-icon {
+	flex-shrink: 0;
+	transition: transform 0.2s ease;
+}
+
+.ab-see-full.ab-open:not(.ab-selected-date) .ab-see-full-icon {
+	transform: none;
+}
+
+/* ====================================================================
+   8. INLINE CALENDAR WRAP
+   ==================================================================== */
+
+.ab-inline-wrap {
+	display: grid;
+	grid-template-rows: 0fr;
+	box-shadow: var(--ab-shadow-popup);
+	transition: grid-template-rows 0.22s cubic-bezier(0.22, 0.8, 0.36, 1);
+}
+.ab-inline-wrap.ab-open {
+	grid-template-rows: 1fr;
+}
+.ab-inline-inner {
+	overflow: hidden;
+	min-height: 0;
+}
+
+/* ====================================================================
+   9. POPUP CALENDAR WRAP
+   ==================================================================== */
+
+.ab-popup-wrap {
+	display: none;
+	position: absolute;
+	left: 0;
+	top: calc(100% + 35px);
+	width: 100%;
+	max-width: 350px;
+	overflow: hidden;
+	background: var(--ab-bg);
+	border-radius: var(--ab-radius);
+	box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.3);
+	z-index: 9999;
+	animation: ab-pop-in 0.2s cubic-bezier(0.22, 0.8, 0.36, 1);
+}
+.ab-popup-wrap.ab-open {
+	display: block;
+}
+
+@keyframes ab-pop-in {
+	from {
+		opacity: 0;
+		transform: translateY(-6px) scale(0.98);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+
+/* ====================================================================
+   10. CALENDAR MONTH NAVIGATION
+   ==================================================================== */
+
+.ab-hr {
+	height: 1px;
+	background: var(--ab-border);
+}
+
+.ab-cal-nav {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding-inline: 12px;
+	padding-block: 6px;
+	background: var(--ab-bg-subtle);
+	border-bottom: 1px solid var(--ab-border);
+}
+
+.ab-nav-btn {
+	padding: 0;
+	min-height: auto;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	width: 28px !important;
+	height: 28px !important;
+	border-radius: 50%;
+	border: 1px solid var(--ab-text-muted);
+	background: transparent;
+	color: var(--ab-text-muted);
+	cursor: pointer;
+	transition: background var(--ab-t);
+}
+.ab-nav-btn:hover:not(:disabled) {
+	background: var(--ab-accent);
+	color: var(--ab-accent-text);
+}
+
+.ab-month-label {
+	font-size: 16px;
+	font-weight: 600;
+	letter-spacing: -0.01em;
+	color: var(--ab-text);
+}
+
+/* ====================================================================
+   11. CALENDAR GRID + CELLS
+   ==================================================================== */
+
+.ab-cal-grid {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	gap: 4px;
+	padding-block: 10px;
+}
+
+.ab-g-dow {
+	text-align: center;
+	padding-bottom: 10px;
+	font-size: 13px;
+	font-weight: 600;
+	letter-spacing: 0.03em;
+	color: var(--ab-text-muted);
+}
+
+/*
+ * The calendar cell fills its grid track horizontally — this is what
+ * lets a tagged date range paint a CONTINUOUS pill across adjacent
+ * cells (see § 13). The visible 32px day circle lives on the inner
+ * `.ab-cn` span (already rendered by JS); selection / hover / today /
+ * disabled visuals attach to the circle, while the cell itself
+ * carries the range pill background.
+ */
+.ab-cell {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	height: var(--ab-cell);
+	font-size: 13px;
+	font-weight: 400;
+	color: var(--ab-text);
+	cursor: pointer;
+	transition:
+		background var(--ab-t),
+		color var(--ab-t);
+}
+
+.ab-cell .ab-cn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--ab-cell);
+	height: var(--ab-cell);
+	border-radius: 50%;
+	position: relative;
+	z-index: 1;
+	transition:
+		background var(--ab-t),
+		color var(--ab-t);
+}
+
+.ab-cell.ab-cell-empty {
+	pointer-events: none;
+	cursor: default;
+}
+
+.ab-cell:not(.ab-cc-dis):not(.ab-cc-past):not(.ab-cell-empty):hover .ab-cn {
+	background: #f0f2f0;
+}
+
+/* Selected cell — accent fill on the day circle (always wins). */
+.ab-cc-sel .ab-cn {
+	background: var(--ab-accent) !important;
+	color: #fff !important;
+	font-weight: 600;
+}
+
+/* Past / disabled cells — visually identical, both un-clickable */
+.ab-cc-past {
+	color: var(--ab-blocked) !important;
+	cursor: not-allowed !important;
+	pointer-events: none;
+}
+.ab-cc-dis {
+	cursor: not-allowed !important;
+	pointer-events: none;
+}
+.ab-cc-dis .ab-cn {
+	background: transparent !important;
+	color: var(--ab-blocked) !important;
+}
+
+/* Today calendar-cell marker — border lives on the inner day-circle
+   so it doesn't draw across the now-full-width cell box. */
+.ab-cc-today .ab-cn {
+	border: 1px solid #dad55ecc;
+	color: #777620;
+}
+
+.ab-cc-today-dis .ab-cn {
+	border: 1px solid color-mix(in srgb, var(--ab-accent) 30%, transparent);
+}
+
+/* Red cutoff dot centred under the day number */
+.ab-cell-dot {
+	position: absolute;
+	bottom: 3px;
+	left: 50%;
+	transform: translateX(-50%);
+	width: 4px;
+	height: 4px;
+	background: var(--ab-dot);
+	border-radius: 50%;
+	pointer-events: none;
+}
+
+/* ====================================================================
+   12. SELECTION BAR (inside the calendar panel)
+   ==================================================================== */
+
+.ab-sel-bar {
+	display: none;
+	align-items: center;
+	justify-content: space-between;
+	padding: 9px 16px;
+	background: var(--ab-accent-light);
+	border-top: 1px solid #bde0ce;
+}
+.ab-sel-bar.ab-on {
+	display: flex;
+}
+
+.ab-sb-l {
+	font-size: 13px;
+	font-weight: 600;
+	letter-spacing: 0.05em;
+	color: var(--ab-accent);
+}
+.ab-sb-v {
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--ab-text);
+}
+
+/* ====================================================================
+   13. DATE TAGS (cosmetic — set via the `dateClasses` option)
+   --------------------------------------------------------------------
+   Each tag class only exposes two variables; the structural rules
+   below pick them up. Selection ALWAYS wins — the focused day /
+   chip is filled in `--ab-accent`, never a tag's custom palette.
+   ==================================================================== */
+
+/* Peak season — soft blue */
+.ab-tag-peak {
+	--ab-tag-bg: #ffbcd94f;
+	--ab-tag-fg: #6b2c4f;
+}
+.ab-chip.ab-tag-peak {
+	/* background: var(--ab-tag-bg); */
+	color: var(--ab-tag-fg);
+}
+
+/* Valentine's Day — soft red / pink */
+.ab-tag-vday {
+	--ab-tag-bg: #ffe1e1;
+	--ab-tag-fg: #b13a3a;
+}
+.ab-chip.ab-tag-vday {
+	background: var(--ab-tag-bg);
+	border-color: #f4b1b1;
+	color: var(--ab-tag-fg);
+}
+
+/* Mother's Day — soft pink (campaign highlight, NOT a warning) */
+.ab-tag-mday {
+	--ab-tag-bg: #fde2ef;
+	--ab-tag-fg: #6b2c4f;
+}
+.ab-chip.ab-tag-mday {
+	background: var(--ab-tag-bg);
+	border-color: #f0b8d4;
+	color: var(--ab-tag-fg);
+}
+.ab-chip.ab-tag-mday .ab-dom {
+	font-weight: 700;
+}
+
+/* ─── Single-date tag — coloured circle on the day number ─── */
+.ab-cell:not(.ab-tag-range).ab-tag-peak .ab-cn,
+.ab-cell:not(.ab-tag-range).ab-tag-vday .ab-cn,
+.ab-cell:not(.ab-tag-range).ab-tag-mday .ab-cn {
+	background: var(--ab-tag-bg);
+	color: var(--ab-tag-fg);
+}
+
+/* ─── Range tag — continuous pill across adjacent row cells.
+   2px-each-side box-shadow bridges the 4px grid gap. ─── */
+.ab-cell.ab-tag-range {
+	background: var(--ab-tag-bg);
+	color: var(--ab-tag-fg);
+	box-shadow:
+		-2px 0 0 var(--ab-tag-bg),
+		2px 0 0 var(--ab-tag-bg);
+}
+.ab-cell.ab-tag-range.ab-tag-range-start {
+	border-top-left-radius: 999px;
+	border-bottom-left-radius: 999px;
+	box-shadow: 2px 0 0 var(--ab-tag-bg);
+}
+.ab-cell.ab-tag-range.ab-tag-range-end {
+	border-top-right-radius: 999px;
+	border-bottom-right-radius: 999px;
+	box-shadow: -2px 0 0 var(--ab-tag-bg);
+}
+.ab-cell.ab-tag-range.ab-tag-range-start.ab-tag-range-end {
+	border-radius: 999px;
+	box-shadow: none;
+}
+
+/* ─── SELECTED ALWAYS WINS ──────────────────────────────────────
+ * The .ab-cc-sel / .ab-chip.ab-sel state takes precedence over any
+ * tag's custom palette. `.ab-cc-sel .ab-cn` (above, with !important)
+ * already overrides single-date tag colours on the calendar grid;
+ * we just need an explicit override for tagged chips, since tag
+ * rules and `.ab-chip.ab-sel` share specificity and the tag rules
+ * sit later in the file. The pill background on a range cell stays
+ * visible behind the selected day, but the focused circle uses
+ * `--ab-accent`.
+ */
+.ab-chip.ab-sel.ab-tag-peak .ab-dom,
+.ab-chip.ab-sel.ab-tag-vday .ab-dom,
+.ab-chip.ab-sel.ab-tag-mday .ab-dom,
+.ab-chip.ab-sel.ab-tag-peak .ab-dow,
+.ab-chip.ab-sel.ab-tag-vday .ab-dow,
+.ab-chip.ab-sel.ab-tag-mday .ab-dow {
+	color: var(--ab-accent-text);
+}
+@media (max-width: 640px) {
+	.ab-chip.ab-sel.ab-tag-peak .ab-dom,
+	.ab-chip.ab-sel.ab-tag-vday .ab-dom,
+	.ab-chip.ab-sel.ab-tag-mday .ab-dom {
+		color: var(--ab-accent-text);
+	}
+
+	.ab-chip.ab-sel.ab-tag-peak .ab-dow,
+	.ab-chip.ab-sel.ab-tag-vday .ab-dow,
+	.ab-chip.ab-sel.ab-tag-mday .ab-dow {
+		color: var(--ab-accent);
+	}
+}
+
+/* ====================================================================
+   14. TIMESLOT GRID
+   ==================================================================== */
+
+.ab-ts-grid {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 10px;
+	user-select: none;
+	padding: 10px;
+	-webkit-font-smoothing: antialiased;
+	user-select: none;
+}
+
+/* Desktop: fill the full row when there are fewer than 4 slots. Mobile (≤640px)
+   has its own count-class rules further down and is unaffected. */
+@media (min-width: 641px) {
+	.ab-ts-grid.ab-ts-grid-1 {
+		grid-template-columns: repeat(1, minmax(0, 1fr));
+	}
+	.ab-ts-grid.ab-ts-grid-2 {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+	.ab-ts-grid.ab-ts-grid-3 {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+}
+
+.ab-ts-chip {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 3px;
+	padding: 10px;
+	border: 1px solid var(--ab-border);
+	border-radius: 6px;
+	background: var(--ab-bg);
+	color: var(--ab-text);
+	text-align: center;
+	cursor: pointer;
+	transition:
+		border-color 0.13s ease,
+		background 0.13s ease,
+		box-shadow 0.13s ease,
+		opacity 0.13s ease;
+}
+.ab-ts-chip:hover:not(.ab-ts-dis) {
+	border-color: var(--ab-accent);
+}
+
+.ab-ts-grid .ab-ts-label {
+	font-size: 14px;
+	text-transform: capitalize;
+	/* font-family: Lato, sans-serif !important; */
+	color: inherit;
+	line-height: 1;
+	white-space: nowrap;
+}
+
+.ab-ts-grid .ab-ts-time {
+	font-size: 13px;
+	font-weight: 600;
+	letter-spacing: normal;
+	line-height: 1.25;
+	font-family: Lato, sans-serif !important;
+	white-space: nowrap;
+	color: #6b7470;
+}
+
+.ab-ts-unavail {
+	margin-top: 2px;
+	font-size: 12px;
+	font-weight: 400;
+	color: #e05252;
+	line-height: 1;
+}
+
+/* ====================================================================
+   15. TIMESLOT CHIP STATES (selected / disabled / badge)
+   ==================================================================== */
+
+.ab-ts-chip.ab-ts-sel {
+	border-color: var(--ab-accent);
+	background: var(--ab-accent);
+	color: var(--ab-accent-light);
+}
+.ab-ts-chip.ab-ts-sel .ab-ts-time {
+	color: var(--ab-accent-light);
+}
+.ab-ts-chip.ab-ts-dis {
+	opacity: 0.6;
+	cursor: not-allowed;
+	pointer-events: none;
+}
+
+.ab-ts-badge {
+	position: absolute;
+	top: -10px;
+	right: -1px;
+	padding: 3px 7px;
+	line-height: 1;
+	background: #b45309;
+	color: #fff;
+	border-radius: 6px 6px 0px 6px;
+	font-size: 10px;
+	font-weight: 400;
+	letter-spacing: 0.08em;
+	text-transform: capitalize;
+	white-space: nowrap;
+	pointer-events: none;
+}
+
+/* ====================================================================
+   16. TIMESLOT EMPTY STATE
+   ==================================================================== */
+
+.ab-ts-grid.ab-ts-empty {
+	display: block;
+}
+
+.ab-ts-no-slots {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 14px 16px;
+	background: #fff8f8;
+	border: 1.5px dashed #f0c0c0;
+	border-radius: 12px;
+	font-family: "DM Sans", system-ui, sans-serif;
+	font-size: 13px;
+	font-weight: 500;
+	color: #b05050;
+	-webkit-font-smoothing: antialiased;
+}
+
+.ab-ts-no-slots::before {
+	content: "";
+	display: inline-block;
+	flex-shrink: 0;
+	width: 18px;
+	height: 18px;
+	background-color: #e05252;
+	mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Ccircle cx='10' cy='10' r='9' stroke='%23e05252' stroke-width='1.5' fill='none'/%3E%3Cline x1='10' y1='6' x2='10' y2='11' stroke='%23e05252' stroke-width='1.8' stroke-linecap='round'/%3E%3Ccircle cx='10' cy='14' r='1' fill='%23e05252'/%3E%3C/svg%3E");
+	mask-size: contain;
+	mask-repeat: no-repeat;
+	-webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Ccircle cx='10' cy='10' r='9' stroke='%23e05252' stroke-width='1.5' fill='none'/%3E%3Cline x1='10' y1='6' x2='10' y2='11' stroke='%23e05252' stroke-width='1.8' stroke-linecap='round'/%3E%3Ccircle cx='10' cy='14' r='1' fill='%23e05252'/%3E%3C/svg%3E");
+	-webkit-mask-size: contain;
+	-webkit-mask-repeat: no-repeat;
+}
+
+/* ====================================================================
+   17. MOBILE OVERRIDES   ( ≤ 640px )
+   --------------------------------------------------------------------
+   Desktop layout is untouched. On mobile:
+     • Date-row chips lose their border/bg — the selection highlight
+       becomes a filled circle around the day number only (compact).
+     • Today chip: muted circle around the day number, amber label.
+     • 4-slot timeslot grids become a 2×2 layout. All other counts
+       (2, 3, 5+) stay on a single row just like desktop.
+   ==================================================================== */
+
+@media (max-width: 640px) {
+	/* ──────────── 17.1 Date-row chips (compact circle style) ──────── */
+
+	.ab-chips {
+		gap: 2px;
+		padding: 0 10px;
+	}
+
+	.ab-chip {
+		gap: 5px;
+		padding-inline: 0;
+		background: transparent;
+		border: 0;
+		border-radius: 10px;
+		transition: none;
+	}
+	.ab-chip:hover:not(.ab-dis) {
+		border-color: transparent;
+	}
+
+	.ab-dow {
+		font-size: 13px;
+		font-weight: 500;
+		opacity: 1;
+	}
+
+	/* Day number lives inside a 32px circle — the circle is what
+     gets tinted for today / selected. Chip itself stays flat. */
+	.ab-dom {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 32px;
+		height: 32px;
+		border-radius: 50%;
+		font-size: 14px;
+		font-weight: 500;
+		background: var(--ab-bg-subtle);
+		transition:
+			background var(--ab-t),
+			color var(--ab-t);
+	}
+
+	/* TODAY → muted amber ring + amber label */
+	.ab-chip.ab-today {
+		border: none;
+	}
+	.ab-chip.ab-today .ab-dom {
+		border: 1px solid #dad55ecc;
+		color: #777620;
+	}
+
+	/* SELECTED → filled accent circle, accent label */
+	.ab-chip.ab-sel {
+		background: transparent;
+		color: var(--ab-accent);
+	}
+	.ab-chip.ab-sel .ab-dom {
+		background: var(--ab-accent);
+		color: #fff;
+	}
+
+	/* Today + selected: accent wins (don't stack the amber ring) */
+	.ab-chip.ab-today.ab-sel {
+		color: var(--ab-accent);
+	}
+	.ab-chip.ab-today.ab-sel .ab-dom {
+		background: var(--ab-accent);
+		color: #fff;
+	}
+
+	/* Disabled: just dim the whole chip */
+	.ab-chip.ab-dis {
+		opacity: 0.3;
+	}
+
+	.ab-chip-dot {
+		bottom: 2px;
+	}
+
+	.ab-ts-grid-4 {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 5px;
+	}
+	.ab-ts-grid-3 {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 5px;
+	}
+	.ab-ts-grid-2 {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 5px;
+	}
+
+	/* Slightly taller chips on mobile for easier tap targets */
+	.ab-ts-chip {
+		padding: 12px 8px;
+	}
+
+	.ab-popup-wrap {
+		left: 0;
+		right: 0;
+		margin: 0 auto;
+	}
+}

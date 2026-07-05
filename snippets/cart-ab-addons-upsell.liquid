@@ -1,0 +1,153 @@
+{% liquid
+  assign section_id = section_id | default: ''
+  assign cart_pid_vid = cart_pid_vid | default: ','
+%}
+<div class="ab-cart__row">
+  <div class="ab-cart__row-header">
+    <h3 class="ab-cart__section-title ab-cart__step" data-step-section="addons">
+      <span class="ab-cart__step-badge">3</span>
+      Add the perfect finishing touch
+    </h3>
+  </div>
+
+  {% assign addon_collection = collections['add-ons'] %}
+  {% assign active_addon_ids = '' %}
+  {% if addon_collection %}
+    {% for product in addon_collection.products %}
+      {% assign needle = ',' | append: product.id | append: ':' %}
+      {% if cart_pid_vid contains needle %}
+        {% assign tail = cart_pid_vid | split: needle | last %}
+        {% assign vid = tail | split: ',' | first %}
+        {% unless active_addon_ids == '' %}
+          {% assign active_addon_ids = active_addon_ids | append: ',' %}
+        {% endunless %}
+        {% assign active_addon_ids = active_addon_ids | append: vid %}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+
+
+  {% assign tab_filter_setting = settings.ab_addon_filter | default: '' %}
+  {% assign tab_array_raw = tab_filter_setting | split: ',' %}
+
+  <ab-addon-picker
+    data-section-id="{{ section_id }}"
+    data-selection-mode="multiple"
+    data-active-variants="{{ active_addon_ids }}"
+    data-visible-count="10"
+    data-mobile-rows="2"
+  >
+    <div class="ab-cart__tabs-container pd-block-large">
+      <button
+        class="ab-cart__tabs-arrow ab-cart__tabs-arrow--prev"
+        data-tabs-arrow="prev"
+        type="button"
+        aria-label="Scroll filter tabs left"
+        tabindex="-1"
+      >
+        {% render 'icon', icon: 'cart-chevron-left' %}
+      </button>
+      <div class="ab-cart__tabs" data-addon-tabs>
+        {% assign tab_first = true %}
+        {% for tab in tab_array_raw %}
+          {% assign tab_parts = tab | split: '=' %}
+          {% assign tab_display = tab_parts[0] | strip %}
+          {% assign tab_handle = '' %}
+          {% if tab_parts.size > 1 %}
+            {% assign tab_handle = tab_parts[1] | strip | handleize %}
+          {% endif %}
+          {% if tab_handle == '' %}
+            {% assign tab_handle = tab_display | handleize %}
+          {% endif %}
+          {% if tab_display != '' %}
+            <button
+              class="ab-cart__tab-btn{% if tab_first %} is-active{% endif %}"
+              data-tab-filter="{{ tab_handle }}"
+              type="button"
+              aria-pressed="{% if tab_first %}true{% else %}false{% endif %}"
+            >
+              {{ tab_display }}
+            </button>
+            {% assign tab_first = false %}
+          {% endif %}
+        {% endfor %}
+        <span class="ab-cart__tab-indicator" aria-hidden="true"></span>
+      </div>
+      <button
+        class="ab-cart__tabs-arrow ab-cart__tabs-arrow--next"
+        data-tabs-arrow="next"
+        type="button"
+        aria-label="Scroll filter tabs right"
+        tabindex="-1"
+      >
+        {% render 'icon', icon: 'cart-chevron-right' %}
+      </button>
+    </div>
+
+    {% comment %} Product grid {% endcomment %}
+    <div class="ab-cart__card-grid lastchance__addons" data-addon-grid>
+      {% if addon_collection and addon_collection.products.size > 0 %}
+        {% assign addon_id_array = active_addon_ids | split: ',' %}
+        {% assign addon_visible_count = 0 %}
+
+        {% for product in addon_collection.products %}
+          {% if product.available %}
+            {% assign addon_visible_count = addon_visible_count | plus: 1 %}
+
+            {% assign product_tabs = '' %}
+            {% for tag in product.tags %}
+              {% assign tag_full = tag | handleize %}
+              {% if tag_full != '' %}
+                {% unless product_tabs == '' %}
+                  {% assign product_tabs = product_tabs | append: ' ' %}
+                {% endunless %}
+                {% assign product_tabs = product_tabs | append: tag_full %}
+              {% endif %}
+              {% if tag contains ':' %}
+                {% assign tag_bare = tag | split: ':' | last | handleize %}
+                {% if tag_bare != '' and tag_bare != tag_full %}
+                  {% assign product_tabs = product_tabs | append: ' ' | append: tag_bare %}
+                {% endif %}
+              {% endif %}
+            {% endfor %}
+
+            {% assign addon_is_selected = false %}
+            {% assign variant_id_str = product.first_available_variant.id | append: '' %}
+            {% for aid in addon_id_array %}
+              {% if aid == variant_id_str %}
+                {% assign addon_is_selected = true %}
+              {% endif %}
+            {% endfor %}
+
+            {% assign addon_is_hidden = false %}
+            {% if addon_visible_count > 10 %}
+              {% assign addon_is_hidden = true %}
+            {% endif %}
+
+            {% render 'cart-ab-addon-card',
+              product: product,
+              is_selected: addon_is_selected,
+              is_hidden: addon_is_hidden,
+              tab_tags: product_tabs,
+              placeholder: 'product-2' %}
+          {% endif %}
+        {% endfor %}
+        <p class="ab-cart__no-results" data-no-results>
+          No add-ons available in this category.
+        </p>
+      {% else %}
+        <p class="ab-cart__card-grid-empty">
+          No add-on products available at the moment.
+        </p>
+      {% endif %}
+    </div>
+
+    {% if addon_collection and addon_collection.products.size > 10 %}
+      <div class="ab-cart__show-more-wrapper">
+        <button class="ab-cart__btn-secondary" data-show-toggle type="button">
+          {% render 'icon', icon: 'cart-chevron-down', class: 'ab-cart__show-toggle-icon' %}
+        </button>
+      </div>
+    {% endif %}
+  </ab-addon-picker>
+</div>

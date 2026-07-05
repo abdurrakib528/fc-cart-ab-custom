@@ -1,0 +1,107 @@
+{% liquid
+  assign section_id = section_id | default: ''
+  assign cart_pid_vid = cart_pid_vid | default: ','
+%}
+<div class="ab-cart__row">
+  <div class="ab-cart__row-header">
+    <h3 class="ab-cart__section-title ab-cart__step" data-step-section="message-card">
+      <span class="ab-cart__step-badge">2</span>
+      Choose your Message Card
+    </h3>
+  </div>
+
+  {% assign greeting_card_collection = collections['greeting-cards'] %}
+  {% assign active_card_variant = '' %}
+  {% if greeting_card_collection %}
+    {% for product in greeting_card_collection.products %}
+      {% assign needle = ',' | append: product.id | append: ':' %}
+      {% if cart_pid_vid contains needle %}
+        {% assign tail = cart_pid_vid | split: needle | last %}
+        {% assign active_card_variant = tail | split: ',' | first %}
+        {% break %}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+
+  <ab-addon-picker
+    data-section-id="{{ section_id }}"
+    data-selection-mode="single"
+    data-active-variants="{{ active_card_variant }}"
+    data-addon-type="message-card"
+  >
+    <div class="ab-cart__card-grid pd-block-large">
+      {% if greeting_card_collection and greeting_card_collection.products.size > 0 %}
+        {% assign gcard_count = 0 %}
+        {% for product in greeting_card_collection.products %}
+          {% if product.available %}
+            {% assign gcard_count = gcard_count | plus: 1 %}
+            {% assign card_is_selected = false %}
+            {% assign card_variant_id_str = product.first_available_variant.id | append: '' %}
+            {% if card_variant_id_str == active_card_variant %}
+              {% assign card_is_selected = true %}
+            {% endif %}
+            {% assign card_is_lcp = false %}
+            {% if gcard_count == 1 %}
+              {% assign card_is_lcp = true %}
+            {% endif %}
+            {% render 'cart-ab-addon-card',
+              product: product,
+              is_selected: card_is_selected,
+              is_lcp: card_is_lcp,
+              placeholder: 'product-1' %}
+          {% endif %}
+        {% endfor %}
+      {% else %}
+        <p class="ab-cart__card-grid-empty">
+          No greeting cards available at the moment.
+        </p>
+      {% endif %}
+    </div>
+  </ab-addon-picker>
+
+  {% comment %} Card Message panel — slides down when a card is selected {% endcomment %}
+  <div
+    class="ab-cart__card-message-panel"
+    data-card-message-panel
+  >
+    <div class="ab-cart__textarea-header">
+      <label class="ab-cart__section-title" for="ab-cart-note-{{ section_id }}">
+        Type your Card Message
+      </label>
+      <div class="ab-cart__textarea-meta">
+        <small class="ab-cart__textarea-hint" data-msg-no-emoji>
+          No emojis<span class="ab-cart__textarea-hint-extra"> &mdash; plain text only</span>
+        </small>
+        <small class="ab-cart__textarea-counter" data-msg-counter aria-live="polite">
+          <span data-msg-count>0</span> / 240
+        </small>
+      </div>
+    </div>
+    <textarea
+      class="ab-cart__textarea card-message-textarea"
+      name="note"
+      form="Cart-Form-{{ section_id }}"
+      id="ab-cart-note-{{ section_id }}"
+      maxlength="240"
+      placeholder="Type your card message here and we’ll print it on your message card (leave blank for an empty card). Don’t forget to include your name if you’d like the recipient to know who sent it, or leave it blank to stay anonymous. If you’ve purchased multiple bouquets and would like different messages for each one, please contact us after checkout."
+    >{{ cart.note }}</textarea>
+
+    <div class="ab-cart__pill-wrapper">
+      <p class="ab-cart__pill-label">
+        Or use one of our templates:
+      </p>
+      <div class="ab-cart__pills">
+        {% for block in section.blocks %}
+          {% if block.type == 'text' %}
+            <button type="button" class="ab-cart__pill">
+              {{ block.settings['product-card-message-title'] }}
+            </button>
+            <p class="ab-cart__pill-content">
+              {{ block.settings['product-card-message-content'] | strip }}
+            </p>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>

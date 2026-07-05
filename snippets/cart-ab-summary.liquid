@@ -1,0 +1,214 @@
+<div class="ab-cart__summary-col">
+  <h2 class="ab-cart__heading">Shopping Cart</h2>
+  <ab-cart data-section-id="{{ section.id }}">
+    <form
+      action="{{ routes.cart_url }}"
+      method="post"
+      id="Cart-Form-{{ section.id }}"
+      class="ab-cart__summary"
+    >
+      <input type="hidden" name="checkout" value="Checkout">
+      <input
+        name="attributes[delivery_date]"
+        type="hidden"
+        value="{{ cart.attributes['delivery_date'] }}"
+        data-delivery-date-input
+      >
+      <input
+        name="attributes[delivery_slot]"
+        type="hidden"
+        value=""
+        data-delivery-slot-input
+      >
+
+      <div class="ab-cart__header">
+        <label class="ab-cart__section-title">
+          Items in cart
+          <span class="ab-cart__item-badge">{{ cart.item_count }}</span>
+        </label>
+        <button type="button" class="ab-cart__clear-btn" data-cart-clear>
+          {% render 'icon', icon: 'cart-clear-x' %}
+          Clear All
+        </button>
+      </div>
+      {% capture delete_icon %}{% render 'icon', icon: 'cart-trash' %}{% endcapture %}
+
+      <div class="ab-cart__items-list" aria-live="polite" aria-label="Cart items">
+        {% for item in cart.items %}
+          {% assign item_tags = item.product.tags | join: ',' %}
+          <div class="ab-cart__item" data-cart-tags="{{ item_tags | downcase }}">
+            <a class="ab-cart__item-link" href="{{ item.product.url }}">
+              <img
+                src="{{ item.image | image_url: width: 200 }}"
+                srcset="{{ item.image | image_url: width: 140 }} 140w, {{ item.image | image_url: width: 200 }} 200w"
+                sizes="70px"
+                class="ab-cart__item-img"
+                alt="{{ item.title | escape }}"
+                width="70"
+                height="60"
+                decoding="async"
+                loading="{% if forloop.first %}eager{% else %}lazy{% endif %}"
+              >
+            </a>
+            <div class="ab-cart__item-details">
+              <h4 class="ab-cart__item-name">
+                <a href="{{ item.product.url }}">{{ item.product.title }}</a>
+              </h4>
+              {% unless item.product.has_only_default_variant %}
+                <span class="ab-cart__item-variant">{{ item.variant.title }}</span>
+              {% endunless %}
+              {% if item.properties.size > 0 %}
+                <div class="ab-cart__item-properties">
+                  {% for property in item.properties %}
+                    {% if property.last != blank and property.first[0] != '_' %}
+                      <div class="ab-cart__item-property">
+                        <strong>{{ property.first }}:</strong>
+                        {% if property.last contains '/uploads/' %}
+                          <a href="{{ property.last }}" target="_blank" class="ab-cart__item-property-link"
+                            >File uploaded</a
+                          >
+                        {% else %}
+                          {{ property.last }}
+                        {% endif %}
+                      </div>
+                    {% endif %}
+                  {% endfor %}
+                </div>
+              {% endif %}
+
+              <div class="ab-cart__item-qty-row">
+                <div class="ab-cart__qty-wrapper">
+                  <button
+                    type="button"
+                    class="ab-cart__qty-btn"
+                    data-action="minus"
+                    data-key="{{ item.key }}"
+                    aria-label="Decrease quantity"
+                  >
+                    -
+                  </button>
+                  <input
+                    type="number"
+                    class="ab-cart__qty-input"
+                    value="{{ item.quantity }}"
+                    data-key="{{ item.key }}"
+                    name="updates[{{ item.key }}]"
+                    id="quantity-{{ item.key }}"
+                    min="0"
+                    aria-label="Quantity for {{ item.product.title | escape }}"
+                  >
+                  <button
+                    type="button"
+                    class="ab-cart__qty-btn"
+                    data-action="plus"
+                    data-key="{{ item.key }}"
+                    aria-label="Increase quantity"
+                  >
+                    +
+                  </button>
+                </div>
+                <a
+                  href="{{ item.url_to_remove }}"
+                  class="ab-cart__item-remove"
+                  data-key="{{ item.key }}"
+                  aria-label="Remove {{ item.product.title | escape }}"
+                >
+                  {{ delete_icon }}
+                </a>
+                <span class="ab-cart__item-price">{{ item.price | money }}</span>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+      <div class="ab-cart__delivery-notice" data-delivery-notice hidden>
+        {% render 'icon', icon: 'cart-truck-2', class: 'ab-cart__delivery-notice-icon' %}
+        <span class="ab-cart__delivery-notice-text"> Delivering<span data-delivery-notice-when></span> </span>
+      </div>
+
+      <!-- Totals & Checkout -->
+      <div class="ab-cart__totals-slot" data-totals-slot>
+        <div class="ab-cart__totals">
+          {%- if settings.free_shipping_enable and settings.free_shipping_threshold > 0 -%}
+            {%- assign threshold_cents = settings.free_shipping_threshold | times: 100 -%}
+            {%- assign remaining_cents = threshold_cents | minus: cart.total_price -%}
+            {%- if remaining_cents <= 0 -%}
+              {%- assign progress_pct = 100 -%}
+              {%- assign progress_unlocked = true -%}
+            {%- else -%}
+              {%- assign progress_pct = cart.total_price | times: 100 | divided_by: threshold_cents -%}
+              {%- assign progress_unlocked = false -%}
+            {%- endif -%}
+            <div class="ab-cart__shipping-bar {% if progress_unlocked %}is-unlocked{% endif %}" data-shipping-bar>
+              <p class="ab-cart__shipping-bar-msg">
+                {%- if progress_unlocked -%}
+                  {{ settings.free_shipping_message_unlocked | default: 'You unlocked FREE delivery!' }}
+                {%- else -%}
+                  {%- assign remaining_money = remaining_cents | money -%}
+                  {{ settings.free_shipping_message_progress | default: "You're [amount] away from FREE delivery!" | replace: '[amount]', remaining_money }}
+                {%- endif -%}
+              </p>
+              <div class="ab-cart__shipping-bar-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ progress_pct }}">
+                <span class="ab-cart__shipping-bar-fill" style="width: {{ progress_pct }}%;"></span>
+              </div>
+            </div>
+          {%- endif -%}
+
+          <div class="ab-cart__total-row">
+            <div class="ab-cart__total">
+              <span class="ab-cart__total-label">Subtotal</span>
+              <p class="ab-cart__tax-note">Tax included. Shipping calculated at checkout.</p>
+            </div>
+            <span class="ab-cart__total-val">{{ cart.total_price | money }}</span>
+          </div>
+
+          <button
+            type="submit"
+            name="checkout"
+            class="ab-cart__checkout-btn"
+          >
+            {% render 'icon', icon: 'cart-lock', class: 'ab-cart__checkout-lock' %}
+            <span class="ab-cart__checkout-spinner"></span>
+
+            <span class="ab-cart__checkout-text ab-cart__checkout-text--full">Secure Checkout</span>
+            <span class="ab-cart__checkout-text ab-cart__checkout-text--short">Checkout</span>
+          </button>
+
+          <a href="{{ routes.all_products_collection_url }}" class="ab-cart__continue-shopping">
+            {% render 'icon', icon: 'cart-arrow-left' %}
+            Continue shopping
+          </a>
+
+          {%- if settings.trust_strip_enable -%}
+            <div class="ab-cart__trust-strip">
+              <ul class="ab-cart__trust-badges">
+                {%- if settings.trust_badge_1 != blank -%}
+                  <li class="ab-cart__trust-badge">
+                    {% render 'icon', icon: 'cart-check', class: 'ab-cart__trust-icon' %}
+                    <span>{{ settings.trust_badge_1 }}</span>
+                  </li>
+                {%- endif -%}
+                {%- if settings.trust_badge_2 != blank -%}
+                  <li class="ab-cart__trust-badge">
+                    {% render 'icon', icon: 'cart-truck-2', class: 'ab-cart__trust-icon' %}
+                    <span>{{ settings.trust_badge_2 }}</span>
+                  </li>
+                {%- endif -%}
+                {%- if settings.trust_badge_3 != blank -%}
+                  <li class="ab-cart__trust-badge">
+                    {% render 'icon', icon: 'cart-lock', class: 'ab-cart__trust-icon' %}
+                    <span>{{ settings.trust_badge_3 }}</span>
+                  </li>
+                {%- endif -%}
+              </ul>
+              {%- if settings.trust_payment_methods != blank -%}
+                <p class="ab-cart__trust-payments">{{ settings.trust_payment_methods }}</p>
+              {%- endif -%}
+            </div>
+          {%- endif -%}
+        </div>
+      </div>
+    </form>
+  </ab-cart>
+</div>

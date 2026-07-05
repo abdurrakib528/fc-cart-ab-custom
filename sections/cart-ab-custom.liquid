@@ -1,0 +1,288 @@
+{{ 'cart-ab-calendar.css' | asset_url | stylesheet_tag: preload: true }}
+<script src="{{ 'cart-ab-datepicker.js' | asset_url }}" defer="defer"></script>
+
+{{ 'cart-ab-custom.css' | asset_url | stylesheet_tag }}
+
+
+ <script>
+  var productList = [];
+  {% for line in cart.items %}
+    productList.push({{ line.product_id}});
+  {% endfor %}
+  window.uetq = window.uetq || [];
+  window.uetq.push('event', '', {'ecomm_prodid': productList, 'ecomm_pagetype': 'cart'});
+</script>
+
+
+<script>
+  window.AB_ICONS = window.AB_ICONS || {};
+  window.AB_ICONS['warning-triangle'] = `{% render 'icon', icon: 'cart-warning-triangle' %}`;
+  window.AB_ICONS['cal-prev'] = `{% render 'icon', icon: 'cart-cal-prev' %}`;
+  window.AB_ICONS['cal-next'] = `{% render 'icon', icon: 'cart-cal-next' %}`;
+</script>
+
+
+<script type="application/json" id="ab-cart-merchant-data">
+  {
+    "disableDelivery": {
+      "enabled": {{ settings.disable_delivery_enable | default: false | json }},
+      "datesRaw": {{ settings.disable_delivery_dates | default: '' | json }}
+    },
+    "timeslot9to6": {
+      "enabled": {{ settings.timeslot_9to6_enable | default: false | json }},
+      "datesRaw": {{ settings.timeslot_9to6_dates | default: '' | json }}
+    }
+  }
+</script>
+<script>
+  (function () {
+    var node = document.getElementById('ab-cart-merchant-data');
+    try {
+      window.AbCartMerchantConfig = node ? JSON.parse(node.textContent) : null;
+    } catch (err) {
+      console.error('[ab-cart] failed to parse merchant settings', err);
+      window.AbCartMerchantConfig = null;
+    }
+  })();
+</script>
+
+<script src="{{ 'cart-ab-config.js' | asset_url }}" defer="defer"></script>
+<script src="{{ 'cart-ab-custom.js' | asset_url }}" defer="defer"></script>
+
+
+{% style %}
+  #ab-cart-{{section.id}} {
+      /* Brand */
+      --ab-accent: {{ settings.primary_color | default: '#51a582' }};
+      --ab-accent-dark: #2f7a5b;
+      --ab-accent-soft: #eaf5ef;
+
+      --ab-urgent: #b45309;
+      --ab-urgent-bg: #fef3c7;
+      --ab-success: #15803d;
+      --ab-error: #c62828;
+
+      --ab-primary: #181319;
+      --ab-text-main: #181319;
+      --ab-text-neutral: #2d2d2d;
+      --ab-text-secondary: #595959;
+      --ab-text-muted: #737373;
+
+      --ab-fs-h2: 22px;
+      --ab-fs-h3: 16px;
+      --ab-fs-body: 14px;
+      --ab-fs-small: 13px;
+      --ab-fs-tiny: 11px;
+
+      --ab-cart-header-bg: #fafafa;
+      --ab-border-style: 1px solid #e4e6e4;
+      --ab-transition: all 0.25s ease;
+      --ab-font-main: "Merriweather", serif;
+      --inline-pd: 10px;
+      --inline-pd-large: 20px;
+      --block-pd: 7px;
+      --block-pd-large: 10px;
+      --ab-radius: 6px;
+
+  }
+{% endstyle %}
+
+
+
+
+<div class="ab-cart" id="ab-cart-{{section.id}}">
+  <div class="ab-cart__container">
+    {% if cart.item_count > 0 %}
+      {% assign cart_pid_vid = ',' %}
+      {% for item in cart.items %}
+        {% assign cart_pid_vid = cart_pid_vid
+          | append: item.product_id
+          | append: ':'
+          | append: item.variant_id
+          | append: ','
+        %}
+      {% endfor %}
+      <div class="ab-cart__grid">
+        <div class="ab-cart__selection">
+          <h2 class="ab-cart__heading">Delivery Information</h2>
+
+          {% if settings.date_message %}
+            {% assign custom_collection = collections[settings.custom_collection] %}
+            <div class="delivery-notice" role="status">
+              <span class="delivery-notice__text">
+                {{ settings.date_message_text | strip }}
+                {% if custom_collection %}
+                  <a class="delivery-notice__link" target="_blank" href="{{ custom_collection.url }}" rel="noopener">{{ custom_collection.title }} &rsaquo;</a>
+                {% endif %}
+              </span>
+            </div>
+          {% endif %}
+
+          <ab-delivery-picker
+            data-section-id="{{ section.id }}"
+            data-accent="#51a582"
+          >
+            <div class="ab-datepicker-section">
+              <div class="ab-datepicker-wrapper">
+                <div class="ab-cart__row-header">
+                  <p class="ab-cart__section-title ab-cart__step" data-step-section="delivery">
+                    <span class="ab-cart__step-badge">1</span>
+                    When should we deliver?
+                  </p>
+
+                  <span id="ab-clock" class="ab-skel-js"></span>
+                </div>
+
+                <div class="ab-calendar">
+                  <div class="ab-skel ab-skel--cal" aria-hidden="true">
+                    <span class="ab-skel__label"></span>
+                    <div class="ab-skel__chips">
+                      <span></span><span></span><span></span><span></span>
+                      <span></span><span></span><span></span>
+                    </div>
+                    <span class="ab-skel__btn"></span>
+                  </div>
+                  <h3 class="ab-subheading">Delivery date</h3>
+                  <div id="ab-daterow"></div>
+                  <button
+                    id="ab-calendar"
+                    class="ab-see-full"
+                    mode="popup"
+                    timezone="Asia/Manila"
+                    type="button"
+                  >
+                    <span class="ab-see-full-text">See full calendar</span>
+                    {% render 'icon', icon: 'cart-arrow-right', class: 'ab-see-full-icon' %}
+                  </button>
+                </div>
+
+                <div class="ab-timeslots">
+                  <div class="ab-skel ab-skel--ts" aria-hidden="true">
+                    <span class="ab-skel__label"></span>
+                    <span class="ab-skel__bar"></span>
+                  </div>
+                  <h3 class="ab-subheading">Time Slot</h3>
+                  <div id="ab-timeslots" timezone="Asia/Manila"></div>
+                </div>
+              </div>
+            </div>
+          </ab-delivery-picker>
+        
+          {% render 'cart-ab-greeting-card', section_id: section.id, cart_pid_vid: cart_pid_vid %}
+          {% render 'cart-ab-addons-upsell', section_id: section.id, cart_pid_vid: cart_pid_vid %}
+        </div>
+
+        {% render 'cart-ab-summary', section_id: section.id, cart: cart %}
+
+      </div>
+    {% else %}
+      <!-- Empty cart state -->
+      <div class="ab-cart__empty-state">
+        <img
+          src="{{ 'fruit_basket.jpg' | asset_url }}"
+          alt="Empty shopping basket"
+          loading="lazy"
+          width="180"
+          height="180"
+        >
+        <h2 class="ab-cart__empty-title">Your basket is empty</h2>
+        <p class="ab-cart__empty-subtitle">Brighten someone's day with a thoughtful gift &mdash; flowers, treats, and more.</p>
+        <div class="ab-cart__empty-actions">
+          <a href="/collections/all" class="ab-cart__empty-link">Browse all gifts &rsaquo;</a>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+
+
+
+{% schema %}
+{
+  "name": "AB Custom Cart",
+  "tag": "section",
+  "class": "ab-cart-section",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Brand"
+    },
+    {
+      "type": "color",
+      "id": "primary_color",
+      "label": "Primary Theme Color",
+      "default": "#51a582"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "text",
+      "name": "Card Message",
+      "settings": [
+        {
+          "type": "text",
+          "id": "product-card-message-title",
+          "label": "Title",
+          "default": "Happy Birthday"
+        },
+        {
+          "type": "textarea",
+          "id": "product-card-message-content",
+          "label": "Message Content",
+          "default": "Wishing you a very happy birthday!"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "AB Custom Cart",
+      "blocks": [
+        {
+          "type": "text",
+          "settings": {
+            "product-card-message-title": "Happy Birthday",
+            "product-card-message-content": "Dear ,\nWith very best wishes for a most wonderful birthday and year ahead.\nMuch love,"
+          }
+        },
+        {
+          "type": "text",
+          "settings": {
+            "product-card-message-title": "Romance",
+            "product-card-message-content": "To the most special person in my life. You are my love, my heart and my joy. I cannot imagine my life without you."
+          }
+        },
+        {
+          "type": "text",
+          "settings": {
+            "product-card-message-title": "Get well soon",
+            "product-card-message-content": "Dear ,\nWarmest wishes for a speedy recovery! Our thoughts are with you and we hope this brightens up your day."
+          }
+        },
+        {
+          "type": "text",
+          "settings": {
+            "product-card-message-title": "Anniversary",
+            "product-card-message-content": "Dear ,\nThank you for the memories of yesterday, for the happiness today, and the promise of all tomorrows! Happy Anniversary!"
+          }
+        },
+        {
+          "type": "text",
+          "settings": {
+            "product-card-message-title": "I'm Sorry",
+            "product-card-message-content": "Dear ,\nI'll never forgive myself...but I'm hoping you will. I'm sorry."
+          }
+        },
+        {
+          "type": "text",
+          "settings": {
+            "product-card-message-title": "Sympathy",
+            "product-card-message-content": "Dear ,\nPlease accept our condolences for your loss.\nWith deepest sympathy,"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}
