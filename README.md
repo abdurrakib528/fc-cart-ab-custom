@@ -2,7 +2,7 @@
 
 A modular, self-contained **custom Shopify cart** feature — a full delivery-date + timeslot picker, greeting-card selector, add-on upsells, and a live cart summary.
 
-This repo contains **only** the custom cart code, cleanly renamed under a single `cart-ab-*` namespace so anyone can drop it into a Shopify theme and understand what each file does at a glance.
+This repo contains **only** the custom cart code, cleanly renamed under the `cart-ab-*` namespace (plus the shared `product-ab-quickview` modal) so anyone can drop it into a Shopify theme and understand what each file does at a glance.
 
 ---
 
@@ -11,7 +11,8 @@ This repo contains **only** the custom cart code, cleanly renamed under a single
 ```
 fc-cart-ab-custom/
 ├── sections/
-│   └── cart-ab-custom.liquid        # 🧩 Entry point — the cart section (schema + layout)
+│   ├── cart-ab-custom.liquid        # 🧩 Entry point — the cart section (schema + layout)
+│   └── product-ab-quickview.liquid  # 🔍 Global product quick-view modal (wired in theme.liquid)
 ├── snippets/
 │   ├── cart-ab-summary.liquid        # 🧾 Cart line-items, totals, checkout button
 │   ├── cart-ab-greeting-card.liquid  # 💌 "Choose your Message Card" step
@@ -42,6 +43,9 @@ graph TD
     GC -->|render| CARD["snippets/cart-ab-addon-card"]
     UP -->|render| CARD
 
+    CARD -.opens on 'i' click.-> QV["sections/product-ab-quickview<br/>(global quick-view modal)"]
+    TH["layout/theme.liquid"] -->|section| QV
+
     S -.asset.-> CSS1["cart-ab-custom.css"]
     S -.asset.-> JS1["cart-ab-custom.js"]
     S -.asset.-> CFG["cart-ab-config.js"]
@@ -51,26 +55,29 @@ graph TD
     classDef entry fill:#51a582,stroke:#2f7a5b,color:#fff;
     classDef snip fill:#eaf5ef,stroke:#51a582,color:#181319;
     classDef asset fill:#fafafa,stroke:#c9c9c9,color:#595959;
+    classDef modal fill:#fff3e0,stroke:#b45309,color:#181319;
     class T,S entry;
     class SUM,GC,UP,CARD snip;
     class CSS1,JS1,CFG,CALCSS,DP asset;
+    class QV,TH modal;
 ```
 
 ---
 
 ## ✅ Prerequisites (must already exist in your theme)
 
-This cart depends on a few theme-level things that live **outside** these 10 files. Set these up first or the cart will error/look broken:
+This cart depends on a few theme-level things that live **outside** these files. Set these up first or the cart will error/look broken:
 
 | Dependency | What / Why | Required? |
 |---|---|---|
 | **`snippets/icon.liquid`** | The theme's icon renderer. The cart calls `{% render 'icon', icon: 'cart-*' %}` many times. | 🔴 Required |
-| **`cart-*` icon SVGs** | Icons used: `cart-clear-x`, `cart-trash`, `cart-truck-2`, `cart-lock`, `cart-check`, `cart-plus`, `cart-arrow-left`, `cart-arrow-right`, `cart-chevron-left/right/down`, `cart-warning-triangle`, `cart-cal-prev`, `cart-cal-next`. | 🔴 Required |
+| **`cart-*` icon SVGs** | Icons used: `cart-clear-x`, `cart-trash`, `cart-truck-2`, `cart-lock`, `cart-check`, `cart-plus`, `cart-arrow-left`, `cart-arrow-right`, `cart-chevron-left/right/down`, `cart-warning-triangle`, `cart-cal-prev`, `cart-cal-next`, `cart-modal-close`, `cart-modal-arrow-right`. | 🔴 Required |
 | **Collection `greeting-cards`** | Products shown in the "Message Card" step. | 🔴 Required |
 | **Collection `add-ons`** | Products shown in the add-on upsell step. | 🔴 Required |
 | **`assets/fruit_basket.jpg`** | Empty-cart illustration. | 🟡 Optional |
-| **`sections/ab-product-modal.liquid`** | Quick-view modal for the "i" button on product cards. | 🟡 Optional |
-| **Theme settings** | `primary_color`, `free_shipping_*`, `trust_*`, `disable_delivery_*`, `timeslot_9to6_*`, `date_message*`, `custom_collection`, and **`ab_addon_filter`** (see below). | 🟠 See step 4 |
+| **Theme settings** | `primary_color`, `free_shipping_*`, `trust_*`, `disable_delivery_*`, `timeslot_9to6_*`, `date_message*`, `custom_collection`, and **`ab_addon_filter`** (see below). | 🟠 See step 5 |
+
+> ℹ️ The product quick-view modal (`sections/product-ab-quickview.liquid`) **is included in this repo** — see install step 4.
 
 ---
 
@@ -80,8 +87,9 @@ This cart depends on a few theme-level things that live **outside** these 10 fil
 flowchart LR
     A["1️⃣ Get the code<br/>clone / download ZIP"] --> B["2️⃣ Copy files<br/>into theme folders"]
     B --> C["3️⃣ Add cart.json<br/>to templates/"]
-    C --> D["4️⃣ Configure settings<br/>(ab_addon_filter)"]
-    D --> E["5️⃣ Preview cart page<br/>✅ done"]
+    C --> Q["4️⃣ Wire quick-view modal<br/>in theme.liquid"]
+    Q --> D["5️⃣ Configure settings<br/>(ab_addon_filter)"]
+    D --> E["6️⃣ Preview cart page<br/>✅ done"]
 ```
 
 ### 1️⃣ Get the code from GitHub
@@ -110,6 +118,7 @@ Copy the files from this repo into the **same-named folders** of your Shopify th
 | `assets/cart-ab-config.js` | `assets/` |
 | `assets/cart-ab-calendar.css` | `assets/` |
 | `assets/cart-ab-datepicker.js` | `assets/` |
+| `sections/product-ab-quickview.liquid` | `sections/` |
 
 > 💡 In the Shopify code editor: open each folder → **Add a new asset/section/snippet** → name it exactly as above → paste the contents.
 
@@ -132,7 +141,17 @@ Copy **`templates/cart.json`** into your theme's `templates/` folder. This tells
 
 > ⚠️ The `"type"` value **must** match the section filename (`cart-ab-custom.liquid` → `"cart-ab-custom"`). If you rename the section, update this too.
 
-### 4️⃣ Configure the add-on filter setting
+### 4️⃣ Wire up the product quick-view modal
+
+The "i" button on each product card opens a **global** quick-view popup. Its section (`product-ab-quickview.liquid`) must be rendered once on every page. Add this line to `layout/theme.liquid`, just before the closing `</body>` tag (or alongside your other global sections like the footer):
+
+```liquid
+{% section 'product-ab-quickview' %}
+```
+
+> The modal fetches product HTML on demand using the Section Rendering API — no extra config needed. Requires the `cart-modal-close` and `cart-modal-arrow-right` icons.
+
+### 5️⃣ Configure the add-on filter setting
 
 The upsell step (`cart-ab-addons-upsell.liquid`) reads a theme setting called **`ab_addon_filter`** to build its category tabs. Each tab is a `Display Name = tag-handle` pair, comma-separated:
 
@@ -157,7 +176,7 @@ All = all, Chocolates = chocaddon, Balloons = baladdon, Cookies = cookaddon, Plu
 
 > Without this setting, the add-on tabs simply won't render — the products still show under one list.
 
-### 5️⃣ Preview
+### 6️⃣ Preview
 
 Open your store's **Cart page** (`/cart`). You should see the full custom cart. 🎉
 If icons are missing, revisit the **Prerequisites** table (the `icon` snippet + `cart-*` SVGs).
@@ -168,28 +187,33 @@ If icons are missing, revisit the **Prerequisites** table (the `icon` snippet + 
 
 If you're migrating an existing theme that had the old `ab-` cart, delete these **dead/legacy** files after installing the new one:
 
+**Replaced** — old versions of files now in this repo (delete after copying the new ones in):
 ```
 sections/ab-cart-section.liquid
-sections/ab-cart-template-v1.liquid
+sections/ab-product-modal.liquid
 assets/ab-cart-section.css
 assets/ab-cart-section.js
 assets/ab-cart-config.js
 assets/ab-calendar.css
 assets/ab-datepicker.js
-assets/ab-cart.css
-assets/ab-cart.js
 snippets/ab-cart-summary.liquid
 snippets/ab-product-greeting-card.liquid
 snippets/ab-last-chance-addons.liquid
 snippets/ab-product-addon-card.liquid
+```
+
+**Dead v1 leftovers** — unused, referenced nowhere in the live cart:
+```
+sections/ab-cart-template-v1.liquid
+assets/ab-cart.css
+assets/ab-cart.js
 snippets/ab-cart-item-list.liquid
 snippets/ab-datepicker.liquid
 snippets/ab-product-addons.liquid
 snippets/ab-product-addons-card.liquid
+snippets/ab-product-modal.liquid
 templates/cart.old.liquid
 ```
-
-> The first 13 are the **old versions of the files in this repo** (replaced by their `cart-ab-*` equivalents). The rest are **unused v1 leftovers** with no references anywhere.
 
 ---
 
@@ -207,5 +231,8 @@ templates/cart.old.liquid
 | `snippets/ab-product-greeting-card.liquid` | `snippets/cart-ab-greeting-card.liquid` |
 | `snippets/ab-last-chance-addons.liquid` | `snippets/cart-ab-addons-upsell.liquid` |
 | `snippets/ab-product-addon-card.liquid` | `snippets/cart-ab-addon-card.liquid` |
+| `sections/ab-product-modal.liquid` | `sections/product-ab-quickview.liquid` |
 
-> **Note:** Internal CSS class names and JS variables still use the `ab-` prefix (e.g. `.ab-cart__item`). These are cosmetic and were intentionally left unchanged so functionality is 100% identical. They can be renamed in a future pass if desired.
+> **Why `product-ab-*` and not `cart-ab-*` for the modal?** The quick-view popup is rendered globally in `theme.liquid` and isn't specific to the cart page, so it keeps its own `product-ab-*` namespace. When you rename it, also update its `{% section %}` tag in `layout/theme.liquid`.
+
+> **Note:** Internal CSS class names and JS variables still use the `ab-` prefix (e.g. `.ab-cart__item`, `<ab-product-modal>`). These are cosmetic and were intentionally left unchanged so functionality is 100% identical. They can be renamed in a future pass if desired.
